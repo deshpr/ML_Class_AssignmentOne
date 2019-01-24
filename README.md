@@ -5,6 +5,7 @@ In this assignment,  we apply regression model to input daata about insurance cl
 
 We use Linear Regression to model the data, and Mean Squared Error as our Cost Function, and Batched Gradient Descent to fit the data.
 
+
 ## How to run the Code
 
 1. Navigate to this directory on command line.
