@@ -9,6 +9,11 @@ import pdb
 from operator import add
 from sklearn.model_selection import KFold # import KFold
 import sys
+import logging
+
+import logging
+
+
 
 
 
@@ -31,6 +36,7 @@ def calculateMseCost(X, Y, theta):
     return cost
 
 def gradient_descent_matrix(X_train, Y_train, alpha):    
+    
     """Performs Batch Gradient descent for Linear Regression, by employing the matrix approach.
         The algorithm continues to take steps until either the difference in theta becomes less than 0.000001, or
         1 million iterations have been performed.
@@ -60,10 +66,10 @@ def gradient_descent_matrix(X_train, Y_train, alpha):
         if stepCount > 1000000:
             print("ending at iteration at stepCount = {} ".format(stepCount))        
         
-    print("Theta = {}".format(thetaInitial))
     return thetaInitial
 
 def iterative_step_gradient_descent(X_train, Y_train, thetaZeroStart, thetaOneStart, alpha):
+    
     """Performs a single step of gradient descent using the iterative approach.
         Calculates the partial derivatives for both thetaZero and thetaOne, and then returns the updated thetaZero 
         and thetaOne values.
@@ -90,6 +96,7 @@ def iterative_step_gradient_descent(X_train, Y_train, thetaZeroStart, thetaOneSt
     return [newThetaZero, newThetaOne]
 
 def iterative_gradient_descent(X_train, Y_train, thetaZero, thetaOne, alpha):
+    
     """Performs the iterative gradient descent for  linear regression.
         After performing multiple iterations, this method returns the coefficients for the 
         linear regression model for the given training data.
@@ -115,6 +122,7 @@ def iterative_gradient_descent(X_train, Y_train, thetaZero, thetaOne, alpha):
     return [thetaZero, thetaOne]
 
 def calculateSkLearnGradientDescent(X_train, y_train, X_test, y_test, feature_cols):
+    
     """Performs Linear Regression using the sklearn package.
         Returns the coefficients for the linear regression model after fitting the input training data.
 
@@ -137,15 +145,20 @@ def calculateSkLearnGradientDescent(X_train, y_train, X_test, y_test, feature_co
     return [linreg.intercept_, linreg.coef_[0]]
 
 
-def plot_data(x, y):
+def plot_data(x, y, intercept, slope):
     """Plots the data as a scatter plot. Also both the inputs must be data frames.
     """
     plt.scatter(x, y)
-    plt.show() # Depending on whether you use IPython or interactive mode, etc.
-    data.plot(style=['o','rx'])
-
+     # Depending on whether you use IPython or interactive mode, etc.
+    plt.plot(style=['o','rx'])
+    axes = plt.gca()
+    x_vals = x
+    y_vals = intercept + slope * x_vals
+    plt.plot(x_vals, y_vals, '--')
+    plt.show()
 
 def main(filename):
+    
     print("Reading the data..")
     data = pd.read_csv(filename)
     print("Finished reading the data..")
@@ -233,12 +246,13 @@ def main(filename):
     print("MSE SkLearn: {}".format(averageMseSkLearn))
     print("MSE Matrix: {}".format(averageMseMatrix))
     print("MSE Iterative: {}".format(averageMseIterative))    
+    plot_data(X, y, averageThetaMatrix[0], averageThetaMatrix[1])
     print("Program complete..")
 
 
 if __name__ == '__main__':    
-    print('Number of arguments:', len(sys.argv), 'arguments.')
-    print('Argument List:', str(sys.argv))
+    print("run program")
+    print('Argument List:{}'.format(str(sys.argv)))
     filename = sys.argv[1]
     main(filename)
 
