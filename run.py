@@ -30,7 +30,6 @@ def calculate_coefficients(X_train, Y_train):
 
     return thetaZero, thetaOne
 
-
 def linear_regression(X_train, Y_train):
     thetaZero, thetaOne = calculate_coefficients(X_train, Y_train)
     Y_prediction =  thetaZero + (thetaOne * X_train)
@@ -43,23 +42,17 @@ def linear_regression(X_train, Y_train):
     # function to show plot 
     plt.show() 
 
-def calculateCost(X, Y, theta):
+def calculateMseCost(X, Y, theta):
     count = len(X)        
-    output = X.dot(theta)
-    cost =  (1/2*count) * np.sum(np.square(output.values  - Y.values.reshape(len(Y), 1)))
+    X_transformed = X.copy()
+    X_transformed.insert(0, 'for theta 0', 1)
+    prediction = np.dot(X_transformed.values, theta)
+    difference = np.square(prediction - Y.values)
+    cost = (1/1)*(1/count) * np.sum(difference)
     return cost
 
-"""
-def linear_regression_gradient_descent(X_train, Y_train):
-    theta  = np.random.randn(2,1)
-    iterationCount = 150
-    alpha = 0.01
-    theta, thetaSoFar, costsSoFar = batch_gradient_descent(X_train, Y_train, theta, alpha, iterationCount)
-    print("complete")
-"""
 
-
-def calculateCost(thetaZero, thetaOne, X, Y):
+def calculateCostIterative(thetaZero, thetaOne, X, Y):
     total = 0
     for i in range(0, len(X)):
 #        pdb.set_trace()
@@ -70,75 +63,74 @@ def calculateCost(thetaZero, thetaOne, X, Y):
         total += (error * error)
     return total/(2 * len(X))
 
+def getPredictions(X, theta):
+    return np.dot(X, theta)
 
-
-
-
-def gradient_descent(X_train, Y_train, thetaZero, thetaOne, alpha, iterationCount = 20):
-    i = -1
+def gradient_descent_matrix(X_train, Y_train, alpha, iterationCount):    
+    X_train_transformed = X_train.copy()
+    X_train_transformed.insert(0, 'for theta 0', 1)
+    featureCount = len(X_train_transformed.columns)
+    zeros = [0] * featureCount
+    stepCount = -1
+    thetaInitial = np.array(zeros)
+    count = len(X_train)
     while True:
-        i += 1
-        print("At iteration = {}".format(i))
-        thetaZeroNew, thetaOneNew =  step_gradient_descent(X_train, Y_train, thetaZero, thetaOne, alpha)
-        thetaZeroChange = abs(thetaZeroNew - thetaZero)
-        thetaOneChange = abs(thetaOneNew - thetaOne)
-        thetaZero = thetaZeroNew
-        thetaOne = thetaOneNew
-        print("theta zero = {}, theta one = {}".format(thetaZero, thetaOne))
-        if (thetaZeroChange <= 0.0001  and thetaOneChange <= 0.0001) or (i >= 1000000):
-            print("ending at iteration = {}".format(i))
+        stepCount += 1
+        difference = (np.dot(X_train_transformed.values, thetaInitial) - Y_train.values)
+        thetaUpdate = thetaInitial - alpha * (1/count) * (np.dot(X_train_transformed.T.values, difference))
+        thetaDifference = np.absolute(thetaUpdate - thetaInitial)
+        maxElement = max(thetaDifference)        
+        thetaInitial  = thetaUpdate
+        if maxElement < 0.000001:
+            print("ending at iteration at stepCount = {} ".format(stepCount))
             break
-    return thetaZero, thetaOne
+        if stepCount > 1000000:
+            print("ending at iteration at stepCount = {} ".format(stepCount))        
+        
+    print("Theta = {}".format(thetaInitial))
+    return thetaInitial
 
-def step_gradient_descent(X_train, Y_train, thetaZeroStart, thetaOneStart, alpha):
+
+def iterative_step_gradient_descent(X_train, Y_train, thetaZeroStart, thetaOneStart, alpha):
     # Add it in the beginning
     count = len(X_train)
     thetaZeroGradient = 0
     thetaOneGradient = 0
-#    X_train_Transformed.insert(0, 'for theta 0', 1)
     for i in range(0, len(X_train)):
-#        pdb.set_trace()
         yValue = Y_train.iloc[i]
         xValue = X_train.iloc[i,0]
-#        print("x = {}, y  = {}".format(xValue, yValue))
-#        thetaZero_Gradient += -(2/count) * (yValue - (thetaOneStart * xValue + thetaZeroStart))
-#       thetaOne_Gradient += -(2/count) * xValue * (yValue - (thetaOneStart * xValue + thetaZeroStart))
         thetaZeroGradient += (thetaOneStart * xValue) + thetaZeroStart - yValue
         thetaOneGradient += ((thetaOneStart * xValue) + thetaZeroStart - yValue)*xValue
-    print("theta Zero gradient = {}, theta one gradient = {}".format(thetaZeroGradient, thetaOneGradient))
+#    print("theta Zero gradient = {}, theta one gradient = {}".format(thetaZeroGradient, thetaOneGradient))
     newThetaZero = thetaZeroStart - (alpha * (1/count) * thetaZeroGradient)
     newThetaOne = thetaOneStart - (alpha * (1/count) * thetaOneGradient) 
     return [newThetaZero, newThetaOne]
 
-
-    """
-    costsSoFar = np.zeros(iterationCount)
-    thetaSoFar = np.zeros((iterationCount,2))
-    for iteration in range(iterationCount):
-        print("Start iteration = {}".format(iteration))
-        predictionOutput = X_train_Transformed.dot(theta)
-        thetaBefore = theta.copy()
-        print("prediction outout calculated")
-        predictionOutputSeries = predictionOutput.iloc[:,0]
-        difference = (predictionOutputSeries - Y_train).values
-        rightHandSide  = (1/count)*alpha*(X_train_Transformed.T.dot(difference))
-        theta = theta - rightHandSide.values.reshape(len(rightHandSide.values), 1)
-        print("Theta = {}, theta before = {}".format(theta, thetaBefore))        
-        thetaSoFar[iteration,:] = theta.T
-        costsSoFar[iteration] = calculateCost(X_train_Transformed, Y_train, theta)
-        if iteration > 0:
-            difference = (costsSoFar[iteration] - costsSoFar[iteration - 1])
-        else:
-            difference = costsSoFar[iteration]
-        print("differencde in cost = {}".format(difference))
-        if iteration > 0 and difference <= 0.001:
-            print("done..")
+def gradient_descent(X_train, Y_train, thetaZero, thetaOne, alpha, iterationCount):
+    i = -1
+    while True:
+        i += 1
+        thetaZeroNew, thetaOneNew =  iterative_step_gradient_descent(X_train, Y_train, thetaZero, thetaOne, alpha)
+        thetaZeroChange = abs(thetaZeroNew - thetaZero)
+        thetaOneChange = abs(thetaOneNew - thetaOne)
+        thetaZero = thetaZeroNew
+        thetaOne = thetaOneNew
+        if (thetaZeroChange <= 0.000001  and thetaOneChange <= 0.000001) or (i >= 1000000):
+            print("ending at iteration = {}".format(i))
             break
-    pdb.set_trace()
-    """
-    return theta, thetaSoFar, costsSoFar
+    return [thetaZero, thetaOne]
 
+def calculateSkLearnGradientDescent(X_train, y_train, X_test, y_test, feature_cols):
+    # Fitting the model
+    linreg = LinearRegression()
+    linreg.fit(X_train, y_train)
+    print("\nCoefficients:", list(zip(feature_cols, linreg.coef_)))
+    print("Intercept:", linreg.intercept_)
+    y_pred = linreg.predict(X_test)
+    #print("\nMAE:", metrics.mean_absolute_error(y_test, y_pred))
+    print("MSE from sklearn", metrics.mean_squared_error(y_test, y_pred))
 
+    return [linreg.intercept_, linreg.coef_[0]]
 
 def mean_squared_error(y_actual,  y_test):
     difference = y_actual - y_test
@@ -148,6 +140,7 @@ def mean_squared_error(y_actual,  y_test):
     mean = squared.sum()/length
     print("mean  = {}".format(mean))
     return mean
+
 
 filename = "data/insurance.csv"
 data = pd.read_csv(filename)
@@ -159,18 +152,42 @@ X = data[feature_cols]
 y = data['Y']
 print("type, x = {}, y = {}".format(type(X), type(y)))
 print("splitting the data")
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-#print("calculate coefficients")
-#thetaZero, thetaOne = calculate_coefficients(X_train, y_train)
-#print("theta Zeor = {}, theta One = {}".format(thetaZero, thetaOne))
+from sklearn.model_selection import KFold # import KFold
+foldCount = 3
+kf = KFold(n_splits=foldCount)
+for train_index, test_index in kf.split(X):
+    print("TRAIN:", train_index, "TEST:", test_index)
+    X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+    y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
-#linear_regression(X_train, y_train)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
 thetaZeroStart = 0
 thetaOneStart = 0
 alpha = 0.001
 iterationCount = 100000
-thetaZero, thetaOne = gradient_descent(X_train, y_train, thetaZeroStart, thetaOneStart, alpha, iterationCount)
-print("theta Zeor = {}, theta One = {}".format(thetaZero, thetaOne))
+
+# 3 different ways of calculating our results.
+
+thetaFromIterative = gradient_descent(X_train, y_train, thetaZeroStart, thetaOneStart, alpha, iterationCount)
+thetaFromMatrix = gradient_descent_matrix(X_train, y_train, alpha, iterationCount)
+thetaFromSkitLearn = calculateSkLearnGradientDescent(X_train, y_train, X_test, y_test, feature_cols)
+
+print("Theta from skit learn approach = {}, type = {}".format(thetaFromSkitLearn, type(thetaFromSkitLearn)))
+print("Theta from iterative approach = {}, type = {}".format(thetaFromIterative, type(thetaFromIterative)))
+print("Theta from matrix approach = {}, type = {}".format(thetaFromMatrix, type(thetaFromMatrix)))
+
+
+print("Test Theta from skit learn")
+cost = calculateMseCost(X_test, y_test, np.array(thetaFromSkitLearn))
+print("cost  = {}".format(cost))
+
+print("Test Theta from iterative")
+cost = calculateMseCost(X_test, y_test, np.array(thetaFromIterative))
+print("cost  = {}".format(cost))
+print("Test Theta from matrix approach")
+cost = calculateMseCost(X_test, y_test, np.array(thetaFromMatrix))
+print("cost  = {}".format(cost))
 
 
 
@@ -183,16 +200,7 @@ data.plot(style=['o','rx'])
 """
 
 
-# Fitting the model
-linreg = LinearRegression()
-linreg.fit(X_train, y_train)
-print("\nCoefficients:", list(zip(feature_cols, linreg.coef_)))
-print("Intercept:", linreg.intercept_)
-
 # Evaluating the model
-y_pred = linreg.predict(X_test)
-print("\nMAE:", metrics.mean_absolute_error(y_test, y_pred))
-#print("MSE:", metrics.mean_squared_error(y_test, y_pred))
 #print("RMSE:", np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
 #print("Length = {}, {}".format(len(y_pred), len(y_test)))
 """
